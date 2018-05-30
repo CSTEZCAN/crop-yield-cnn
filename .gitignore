@@ -1,11 +1,11 @@
 # Project related
-
 *.zip
 *.pkl
 *.html
 documents/
 datasets/
 models/
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
