@@ -1,7 +1,6 @@
 # Project related
 *.zip
 *.pkl
-*.html
 documents/
 datasets/
 models/
