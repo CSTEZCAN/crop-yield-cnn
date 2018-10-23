@@ -73,7 +73,7 @@ class DroneYieldMeanCNN(nn.Module):
         self.log_debug("Initializing weights:")
         self.apply(self.initialize_weights)
 
-        self.objective_loss = nn.L1Loss()
+        self.objective_loss = nn.L1Loss(reduction='none')
 
         if self.CUDA:
             self.cuda()
@@ -299,58 +299,56 @@ class DroneYieldMeanCNN(nn.Module):
 
         for batch in dataset:
 
-            self.optimizer.zero_grad()
+            with torch.set_grad_enabled(training):
 
-            x = Variable(batch['x'].float())
-            y_true = Variable(batch['y'].float())
+                self.optimizer.zero_grad()
 
-            if self.CUDA:
+                x = Variable(batch['x'].float())
+                y_true = Variable(batch['y'].float())
 
-                x = Variable(batch['x'].float().cuda())
-                y_true = Variable(batch['y'].float().cuda())
+                if self.CUDA:
 
-            if not training:
+                    x = Variable(batch['x'].float().cuda())
+                    y_true = Variable(batch['y'].float().cuda())
 
-                x.volatile = True
-                y_true.volatile = True
+                self.log_debug("\t{} batch:".format(dataset_name))
+                self.log_debug("\t\tInput type={}, shape={}"
+                            .format(x.__class__.__name__, x.size()))
+                self.log_debug("\t\tTargets type={}, shape={}"
+                            .format(y_true.__class__.__name__, y_true.size()))
+                self.log_debug("\t\tTargets={} ...".format(
+                    y_true.view(-1).data[:3].tolist()))
 
-            self.log_debug("\t{} batch:".format(dataset_name))
-            self.log_debug("\t\tInput type={}, shape={}"
-                           .format(x.__class__.__name__, x.size()))
-            self.log_debug("\t\tTargets type={}, shape={}"
-                           .format(y_true.__class__.__name__, y_true.size()))
-            self.log_debug("\t\tTargets={} ...".format(
-                y_true.view(-1).data[:3].tolist()))
+                y_pred = self(x)
+                self.log_debug("\t\tPredictions type={}, shape={}"
+                            .format(y_pred.__class__.__name__, y_pred.size()))
+                self.log_debug("\t\tPredictions={} ...".format(
+                    y_pred.view(-1).data[:3].tolist()))
 
-            y_pred = self(x)
-            self.log_debug("\t\tPredictions type={}, shape={}"
-                           .format(y_pred.__class__.__name__, y_pred.size()))
-            self.log_debug("\t\tPredictions={} ...".format(
-                y_pred.view(-1).data[:3].tolist()))
+                loss = self.objective_loss(y_pred.view(-1), y_true)
+                self.log_debug("\t\tLoss={}".format(
+                    loss.tolist()[:3]))
 
-            loss = self.objective_loss(y_pred, y_true)
-            self.log_debug("\t\tLoss={}".format(
-                loss.data[:3].tolist()))
+                if training:
 
-            if training:
+                    loss.mean().backward()
+                    self.optimizer.step()
 
-                loss.backward()
-                self.optimizer.step()
+                losses.append(loss)
 
-            losses.append(loss.data[0])
+                del loss, y_pred, y_true, x
 
-            del loss, y_pred, y_true, x
+                if self.debug:
 
-            if self.debug:
+                    i += 1
 
-                i += 1
+                    if i > 2:
 
-                if i > 2:
-
-                    break
-
-        self.log_debug("\t\tLosses={}".format(losses))
-
+                        break
+        
+        losses = torch.cat(losses).tolist()
+        self.log_debug("\t\tLosses={}".format(losses[:3]))
+        
         return losses
 
     def perform_cross_validation(self, k_cv_folds, dataset):
@@ -413,7 +411,8 @@ class DroneYieldMeanCNN(nn.Module):
             training_losses_cv = self.process_batch(
                 dataset=DataLoader(
                     dataset[training_set_indices],
-                    batch_size=fold_batch_size),
+                    batch_size=fold_batch_size,
+                    num_workers=4),
                 training=True)
 
             self.log_debug("\tTest set: samples={}, samples_idx_start={}"
@@ -423,7 +422,8 @@ class DroneYieldMeanCNN(nn.Module):
             test_losses_cv = self.process_batch(
                 dataset=DataLoader(
                     dataset[test_set_indices],
-                    batch_size=fold_batch_size),
+                    batch_size=fold_batch_size,
+                    num_workers=4),
                 training=False)
 
             training_losses += training_losses_cv
@@ -434,7 +434,7 @@ class DroneYieldMeanCNN(nn.Module):
 
         return training_losses, test_losses
 
-    def save_model(self, suppress_output):
+    def save_model(self, suppress_output=False):
         """
         Persist the CNN model state with a filename corresponding to network configuration.
 
