@@ -15,9 +15,10 @@ The notebooks prefixed `GDAL` were run in an environment compliant with the `gda
 - [ML I. Drone Datasets](http://htmlpreview.github.io/?https://github.com/karmus89/crop-yield-cnn/blob/master/html/ML%20I.%20Drone%20Datasets.html)
 - [ML II. Building the CNN](http://htmlpreview.github.io/?https://github.com/karmus89/crop-yield-cnn/blob/master/html/ML%20II.%20Building%20the%20CNN.html)
 - [ML III. CNN Optimization](http://htmlpreview.github.io/?https://github.com/karmus89/crop-yield-cnn/blob/master/html/ML%20III.%20CNN%20Optimization.html)
+- [Appendix A. Re-training the Model](http://htmlpreview.github.io/?https://github.com/karmus89/crop-yield-cnn/blob/master/html/Appendix%20A.%20Re-training%20the%20Model.html)
 
 ---
 
-*To use and edit these files an Anaconda installation of Python, Peewee and PyTorch are required. The contents are viewable within this Github repo.*
+*To use and edit these files an Anaconda installation of Python with Peewee, OSGEO and PyTorch are required. The contents are viewable within this Github repo.*
 
 *All diagrams have been made with [draw.io](http://htmlpreview.github.io/?https://www.draw.io/).*
