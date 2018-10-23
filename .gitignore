@@ -1,9 +1,7 @@
 # Project related
 *.zip
-*.pkl
 documents/
 datasets/
-models/
 
 
 # Byte-compiled / optimized / DLL files
