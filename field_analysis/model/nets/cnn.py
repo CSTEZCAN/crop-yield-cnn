@@ -53,15 +53,6 @@ class DroneYieldMeanCNN(nn.Module):
         self.cnn_total_layers = max(2, cnn_layers)
         self.fc_total_layers = max(2, fc_layers)
 
-        self.model_filename = "cnn_{}_{}x{}x{}_{}cnn_{}fc.pkl".format(
-            str(uuid.uuid4())[:8],   
-            self.source_bands,
-            self.source_dim,
-            self.source_dim,
-            self.cnn_total_layers,
-            self.fc_total_layers)
-        self.model_path = os.path.join(
-            model_settings.MODELS_DIR, self.model_filename)
 
         self.cnn_output = 0
         self.best_test_loss = 1e15
@@ -93,6 +84,17 @@ class DroneYieldMeanCNN(nn.Module):
                 **self.optimizer.defaults,
                 **optimizer_parameters
             }
+        
+        self.model_filename = "{}_{}_{}x{}x{}_{}cnn_{}fc.pkl".format(
+            str(uuid.uuid4())[:8],
+            optimizer.__class__.__name__,   
+            self.source_bands,
+            self.source_dim,
+            self.source_dim,
+            self.cnn_total_layers,
+            self.fc_total_layers)
+        self.model_path = os.path.join(
+            model_settings.MODELS_DIR, self.model_filename)
 
         self.log_debug("Initialized {}".format(self))
         self.log_debug("Optimizer: {} {}".format(
