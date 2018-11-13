@@ -1,5 +1,6 @@
 import os
 import time
+import uuid
 from collections import OrderedDict
 
 import matplotlib.pyplot as plt
@@ -52,7 +53,8 @@ class DroneYieldMeanCNN(nn.Module):
         self.cnn_total_layers = max(2, cnn_layers)
         self.fc_total_layers = max(2, fc_layers)
 
-        self.model_filename = "cnn_{}x{}x{}_{}cnn_{}fc.pkl".format(
+        self.model_filename = "cnn_{}_{}x{}x{}_{}cnn_{}fc.pkl".format(
+            str(uuid.uuid4())[:8],   
             self.source_bands,
             self.source_dim,
             self.source_dim,
@@ -490,7 +492,7 @@ class DroneYieldMeanCNN(nn.Module):
 
         return terminate
 
-    def visualize_training(self, training_losses, test_losses):
+    def visualize_training(self, training_losses, test_losses, save_path=None):
         """
         Visualize the training process with epoch-wise training and test loss means and standard deviations.
 
@@ -498,6 +500,7 @@ class DroneYieldMeanCNN(nn.Module):
 
             training_losses: List of [mean, std] pairs for training losses.
             test_losses: List of [mean, std] pairs for test losses.
+            save_path: Path to save the image to. Default: None
         """
         train = np.array(training_losses)
         train_mean, train_std = train[:, 0], train[:, 1]
@@ -545,6 +548,8 @@ class DroneYieldMeanCNN(nn.Module):
         plt.legend()
         plt.grid()
         plt.minorticks_on()
+        if save_path is not None:
+            plt.savefig(save_path,dpi=200)
         plt.show()
 
     def train(self, epochs, training_data, test_data=None, k_cv_folds=None, early_stopping_patience=None, visualize=True, suppress_output=False):
