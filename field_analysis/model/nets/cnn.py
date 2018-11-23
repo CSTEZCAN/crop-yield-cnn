@@ -1,6 +1,6 @@
 import os
 import time
-import uuid
+from datetime import datetime
 from collections import OrderedDict
 
 import matplotlib.pyplot as plt
@@ -40,7 +40,7 @@ class DroneYieldMeanCNN(nn.Module):
             cnn_layers: Optional. Number of total CNN layers to initialize the network with. Minimum is 2 and this is enforced in the implementation details. Default value is 0.
             fc_layers: Optional. Number of fully connected rectified linear layers to use. Minimum is 2 and this is enforced in the implementation details. Default value is 0.
             optimizer: Optional. An uninitialized `torch.optim` algorithm to be used during training. The optimizer parameters are to be provided separately.
-            optimizer_parameters: Optional. The parameters for the optimizer to use. To see the optimizer, initialize the CNN and call its `optimizer` object. The paramters must be in dict with parameters as the keys. Refer to the optimizer-corresponding documentation found in http://pytorch.org/docs/0.3.1/optim.html.
+            optimizer_parameters: Optional. The parameters for the optimizer to use. To see the optimizer, initialize the CNN and call its `optimizer` object. The paramters must be in dict with parameters as the keys. Refer to the optimizer-corresponding documentation found in http://pytorch.org/docs/0.4.1/optim.html.
             debug: Boolean for whether to print debug statements and follow debugging logic. Default is False.
         """
 
@@ -86,8 +86,8 @@ class DroneYieldMeanCNN(nn.Module):
             }
         
         self.model_filename = "{}_{}_{}x{}x{}_{}cnn_{}fc.pkl".format(
-            str(uuid.uuid4())[:8],
-            optimizer.__class__.__name__,   
+            datetime.now().strftime("%Y%m%d_%H%M%S%f")[:-3],
+            self.optimizer.__class__.__name__,   
             self.source_bands,
             self.source_dim,
             self.source_dim,
@@ -513,7 +513,7 @@ class DroneYieldMeanCNN(nn.Module):
         x = range(1, len(train)+1)
         lowest_test_error = [self.best_test_loss]*len(x)
 
-        plt.rcParams['figure.figsize'] = 10, 6
+        plt.rcParams['figure.figsize'] = 10, 4
         plt.plot(
             x,
             train_mean,
@@ -542,7 +542,7 @@ class DroneYieldMeanCNN(nn.Module):
             linestyle="--",
             label="Best Test Loss",
             color='darkolivegreen')
-        plt.title("Losses")
+        plt.title("Epoch-wise loss averages over single/multi-fold batches")
         plt.xlabel("Epoch")
         plt.ylabel(self.objective_loss.__class__.__name__)
         plt.xlim([1, len(training_losses)])
@@ -554,7 +554,7 @@ class DroneYieldMeanCNN(nn.Module):
             plt.savefig(save_path,dpi=200)
         plt.show()
 
-    def train(self, epochs, training_data, test_data=None, k_cv_folds=None, early_stopping_patience=None, visualize=True, suppress_output=False):
+    def train(self, epochs, training_data, test_data=None, k_cv_folds=None, early_stopping_patience=None, visualize=True, suppress_output=False, save_model=True):
         """
         Train the network for `epochs` number of full iterations with either CV or distinct training and test datasets.
 
@@ -648,9 +648,10 @@ class DroneYieldMeanCNN(nn.Module):
 
                 break
 
-        self.save_model(suppress_output)
-
-        print("Best Test Loss: {:4.2f}".format(self.best_test_loss))
+        if save_model:
+            
+            self.save_model(suppress_output)
+            print("Best Test Loss: {:4.2f}".format(self.best_test_loss))
 
         if visualize and not self.debug:
 
