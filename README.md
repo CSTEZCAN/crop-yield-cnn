@@ -2,7 +2,7 @@
 
 This is the codebase for the article named after the title by me, Petteri Nevavuori, and prof. Tarmo Lipping. 
 
-A multitude of things are omitted, such as the generated dabases (~0.5 GB to +5GB), generated models (~40MB a piece) and all the original files from which the databases were generated from. What is however included are the codebase found under ``python/field_analysis/`` and the Jupyter Notebooks utilizing the codebase in conjuction with the data files found at the root of ``python/``.
+A multitude of things are omitted, such as the generated dabases (~0.5 GB to +5GB), generated intermediary models (~40MB a piece) and all the original files from which the databases were generated from. What is however included are the codebase found under ``python/field_analysis/`` and the Jupyter Notebooks utilizing the codebase in conjuction with the data files found at the root of ``python/``. Also the final models are also present in this repository.
 
 ## Contents
 
@@ -15,10 +15,10 @@ The notebooks prefixed `GDAL` were run in an environment compliant with the `gda
 - [ML I. Drone Datasets](http://htmlpreview.github.io/?https://github.com/karmus89/crop-yield-cnn/blob/master/html/ML%20I.%20Drone%20Datasets.html)
 - [ML II. Building the CNN](http://htmlpreview.github.io/?https://github.com/karmus89/crop-yield-cnn/blob/master/html/ML%20II.%20Building%20the%20CNN.html)
 - [ML III. CNN Optimization](http://htmlpreview.github.io/?https://github.com/karmus89/crop-yield-cnn/blob/master/html/ML%20III.%20CNN%20Optimization.html)
-- [Appendix A. Re-training the Model](http://htmlpreview.github.io/?https://github.com/karmus89/crop-yield-cnn/blob/master/html/Appendix%20A.%20Re-training%20the%20Model.html)
+- [Appendix A. Assessing the Model](http://htmlpreview.github.io/?https://github.com/karmus89/crop-yield-cnn/blob/master/html/Appendix%20A.%20Assessing%20the%20Model.html)
 
 ---
 
 *To use and edit these files an Anaconda installation of Python with Peewee, OSGEO and PyTorch are required. The contents are viewable within this Github repo.*
 
-*All diagrams have been made with [draw.io](http://htmlpreview.github.io/?https://www.draw.io/).*
+*All diagrams have been made with [draw.io](https://www.draw.io/).*
