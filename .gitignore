@@ -2,6 +2,10 @@
 *.zip
 documents/
 datasets/
+models/depth/
+models/optimizer/
+models/optimization/
+models/regularization/
 
 
 # Byte-compiled / optimized / DLL files
