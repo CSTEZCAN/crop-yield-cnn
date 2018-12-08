@@ -397,12 +397,6 @@ class DroneYieldMeanCNN(nn.Module):
             raise TypeError(
                 "Only instances of `Dataset` allowed, as pre-batching messes CV fold-wise reindexing, inbound dataset type={}".format(type(dataset)))
 
-        model_initial_state = self.state_dict()
-        model_cv_states = []
-
-        training_losses = []
-        validation_losses = []
-
         fold_samples = int(len(dataset)/k_cv_folds)
         fold_batch_size = 128
 
@@ -412,6 +406,10 @@ class DroneYieldMeanCNN(nn.Module):
             fold_batch_size))
 
         shuffled_indices = (torch.randperm(len(dataset)).numpy().flatten().tolist())
+        model_initial_state = self.state_dict()
+        model_cv_states = []
+        training_losses = []
+        validation_losses = []
 
         for fold in range(k_cv_folds):
             
@@ -454,6 +452,8 @@ class DroneYieldMeanCNN(nn.Module):
 
             training_losses += training_losses_cv
             validation_losses += validation_losses_cv
+
+            model_cv_states.append(self.state_dict())
 
         self.log_debug("Training losses={}".format(training_losses))
         self.log_debug("Test losses={}".format(validation_losses))
