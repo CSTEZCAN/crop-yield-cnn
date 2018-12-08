@@ -4,6 +4,9 @@ This is the codebase for the article named after the title by me, Petteri Nevavu
 
 A multitude of things are omitted, such as the generated dabases (~0.5 GB to +5GB), generated intermediary models (~40MB a piece) and all the original files from which the databases were generated from. What is however included are the codebase found under ``python/field_analysis/`` and the Jupyter Notebooks utilizing the codebase in conjuction with the data files found at the root of ``python/``. Also the final models are also present in this repository.
 
+*Sometimes the pages fail to load. This is due to failure in serving large HTML-files from Github to an external preview service. This is a Github-side problem, bu reload should alleviate it.*
+
+
 ## Contents
 
 The notebooks prefixed `GDAL` were run in an environment compliant with the `gdal` package. The other notebooks with the `ML` prefix have been run with an environment which had PyTorch installed. The former has an upper limit for the Python version, while the latter is aimed and updated for the latest Python version.
