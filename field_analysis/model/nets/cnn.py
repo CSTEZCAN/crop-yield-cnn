@@ -4,6 +4,7 @@ from datetime import datetime
 from collections import OrderedDict
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 import torch
 from torch import nn, optim
@@ -53,7 +54,6 @@ class DroneYieldMeanCNN(nn.Module):
         self.cnn_total_layers = max(2, cnn_layers)
         self.fc_total_layers = max(2, fc_layers)
 
-
         self.cnn_output = 0
         self.best_test_loss = 1e15
         self.best_model = None
@@ -84,10 +84,12 @@ class DroneYieldMeanCNN(nn.Module):
                 **self.optimizer.defaults,
                 **optimizer_parameters
             }
-        
+
+        self.num_workers = 1 if self.debug else 8
+
         self.model_filename = "{}_{}_{}x{}x{}_{}cnn_{}fc.pkl".format(
             datetime.now().strftime("%Y%m%d_%H%M%S%f")[:-3],
-            self.optimizer.__class__.__name__,   
+            self.optimizer.__class__.__name__,
             self.source_bands,
             self.source_dim,
             self.source_dim,
@@ -317,15 +319,15 @@ class DroneYieldMeanCNN(nn.Module):
 
                 self.log_debug("\t{} batch:".format(dataset_name))
                 self.log_debug("\t\tInput type={}, shape={}"
-                            .format(x.__class__.__name__, x.size()))
+                               .format(x.__class__.__name__, x.size()))
                 self.log_debug("\t\tTargets type={}, shape={}"
-                            .format(y_true.__class__.__name__, y_true.size()))
+                               .format(y_true.__class__.__name__, y_true.size()))
                 self.log_debug("\t\tTargets={} ...".format(
                     y_true.view(-1).data[:3].tolist()))
 
                 y_pred = self(x)
                 self.log_debug("\t\tPredictions type={}, shape={}"
-                            .format(y_pred.__class__.__name__, y_pred.size()))
+                               .format(y_pred.__class__.__name__, y_pred.size()))
                 self.log_debug("\t\tPredictions={} ...".format(
                     y_pred.view(-1).data[:3].tolist()))
 
@@ -349,10 +351,10 @@ class DroneYieldMeanCNN(nn.Module):
                     if i > 2:
 
                         break
-        
+
         losses = torch.cat(losses).tolist()
         self.log_debug("\t\tLosses={}".format(losses[:3]))
-        
+
         return losses
 
     def calculate_model_mean_state(self, states):
@@ -371,10 +373,9 @@ class DroneYieldMeanCNN(nn.Module):
                 [print(value) for value in values]
                 raise ex
         del states
-        gc.collect()
         return mean_state
 
-    def perform_cross_validation(self, k_cv_folds, dataset):
+    def perform_cross_validation(self, k_cv_folds, dataset, cv_indices=None):
         """
         Perform cross-validation with the whole dataset by dividing it into `k_cv_folds` shuffled folds. The fold-wise training and test losses are kept track of. The batch_size is determined dynamically. This is to ensure large enough batches for higher utilization of the GPU and thus making the learning progress faster.
 
@@ -382,18 +383,17 @@ class DroneYieldMeanCNN(nn.Module):
 
             k_cv_folds: The number of CV folds to perform.
             dataset: A non-batch dataset of `Dataset` instance.
+            cv_indices: Indices to use with CV from the Dataset. Workaround, assume pre-shuffled. Default is None.
 
         Returns:
 
             Tuple of lists of training and test losses.
         """
         if k_cv_folds is None:
-
             raise ValueError(
                 "You need to specify `k_cv_folds` if no `test_data` is provided.")
 
         if not isinstance(dataset, Dataset):
-
             raise TypeError(
                 "Only instances of `Dataset` allowed, as pre-batching messes CV fold-wise reindexing, inbound dataset type={}".format(type(dataset)))
 
@@ -405,58 +405,47 @@ class DroneYieldMeanCNN(nn.Module):
             fold_samples,
             fold_batch_size))
 
-        shuffled_indices = (torch.randperm(len(dataset)).numpy().flatten().tolist())
+        if cv_indices is None:
+            shuffled_indices = (torch.randperm(
+                len(dataset)).numpy().flatten().tolist())
+        else:
+            shuffled_indices = cv_indices
+
         model_initial_state = self.state_dict()
         model_cv_states = []
         training_losses = []
         validation_losses = []
 
         for fold in range(k_cv_folds):
-            
             self.log_debug("Performing CV {}:".format(fold+1))
-
             self.load_state_dict(model_initial_state)
-
             if (fold + 1)*fold_samples < len(shuffled_indices):
-
-                test_set_indices = shuffled_indices[
+                validation_set_indices = shuffled_indices[
                     fold * fold_samples: (fold+1)*fold_samples]
-
             else:
-
-                test_set_indices = shuffled_indices[fold*fold_samples:]
-
+                validation_set_indices = shuffled_indices[fold*fold_samples:]
             training_set_indices = list(set(shuffled_indices)
-                                        .difference(set(test_set_indices)))
-
+                                        .difference(set(validation_set_indices)))
             self.log_debug("\tTraining set: samples={}"
                            .format(len(training_set_indices)))
-
             training_losses_cv = self.process_batch(
                 dataset=DataLoader(
                     dataset[training_set_indices],
                     batch_size=fold_batch_size,
-                    num_workers=4),
+                    num_workers=self.num_workers),
                 training=True)
-
             self.log_debug("\tTest set: samples={}, samples_idx_start={}"
-                           .format(len(test_set_indices),
+                           .format(len(validation_set_indices),
                                    fold * fold_samples))
-
             validation_losses_cv = self.process_batch(
                 dataset=DataLoader(
-                    dataset[test_set_indices],
+                    dataset[validation_set_indices],
                     batch_size=fold_batch_size,
-                    num_workers=4),
+                    num_workers=self.num_workers),
                 training=False)
-
             training_losses += training_losses_cv
             validation_losses += validation_losses_cv
-
             model_cv_states.append(self.state_dict())
-
-        self.log_debug("Training losses={}".format(training_losses))
-        self.log_debug("Test losses={}".format(validation_losses))
 
         self.load_state_dict(self.calculate_model_mean_state(model_cv_states))
 
@@ -518,7 +507,7 @@ class DroneYieldMeanCNN(nn.Module):
 
         return terminate
 
-    def visualize_training(self, training_losses, test_losses, save_path=None):
+    def visualize_training(self, training_losses, validation_losses, test_losses, save_path=None):
         """
         Visualize the training process with epoch-wise training and test loss means and standard deviations.
 
@@ -528,26 +517,35 @@ class DroneYieldMeanCNN(nn.Module):
             test_losses: List of [mean, std] pairs for test losses.
             save_path: Path to save the image to. Default: None
         """
+        min_losses = []
+
         train = np.array(training_losses)
         train_mean, train_std = train[:, 0], train[:, 1]
+        min_losses.append(train_mean.min())
 
-        validation = np.array(validation_losses)
-        validation_mean, validation_std = validation[:, 0], validation[:, 1]
-    
+        if validation_losses:
+            validation = np.array(validation_losses)
+            validation_mean, validation_std = validation[:, 0], validation[:, 1]
+            min_losses.append(validation_mean.min())
+
         test = np.array(test_losses)
         test_mean, test_std = test[:, 0], test[:, 1]
+        min_losses.append(test_mean.min())
+
+        min_value = min(min_losses)
 
         x = range(1, len(train)+1)
         lowest_test_error = [self.best_test_loss]*len(x)
 
         plt.rcParams['figure.figsize'] = 10, 4
         plt.plot(
-                x, train_mean, label="Training", color='royalblue')
+            x, train_mean, label="Training", color='royalblue')
         plt.fill_between(
             x, train_mean+train_std, train_mean-train_std, alpha=0.15, color='royalblue')
-        plt.plot(
-            x, validation_mean, label="Validation", color='forestgreen')
-        plt.fill_between(
+        if validation_losses:
+            plt.plot(
+                x, validation_mean, label="Validation", color='forestgreen')
+            plt.fill_between(
             x, validation_mean+validation_std, validation_mean-validation_std, alpha=0.15, color='forestgreen')
         plt.plot(
             x, test_mean, label="Test", color='goldenrod')
@@ -559,7 +557,7 @@ class DroneYieldMeanCNN(nn.Module):
         plt.xlabel("Epoch")
         plt.ylabel(self.objective_loss.__class__.__name__)
         plt.xlim(left=min(x), right=max(x))
-        plt.ylim(bottom=validation_mean[-1] * 0.9)
+        plt.ylim(bottom=min_value * 0.95, top=test_mean.mean()*1.5)
         plt.yscale('log')
         plt.xticks(x)
         plt.grid(which='minor', axis='y')
@@ -571,7 +569,7 @@ class DroneYieldMeanCNN(nn.Module):
         plt.gca().xaxis.set_major_formatter(ticker.ScalarFormatter())
         plt.legend()
         if save_path is not None:
-            plt.savefig(save_path,dpi=200)
+            plt.savefig(save_path, dpi=200)
         plt.show()
 
     def split_test_train(self, dataset, test_split_ratio):
@@ -581,10 +579,11 @@ class DroneYieldMeanCNN(nn.Module):
         """
         split_ratio = min(max(0, test_split_ratio), 1)
         train_length = int((1-split_ratio)*len(dataset))
-        test_length = len(dataset)-train_length
-        train_split, test_split = random_split(
-            dataset=dataset, lengths=[train_length, test_length])
-        return test_split, train_split
+        shuffled_indices = (torch.randperm(
+            len(dataset)).numpy().flatten().tolist())
+        test_indices = shuffled_indices[train_length:]
+        train_indices = shuffled_indices[:train_length]
+        return test_indices, train_indices
 
     def train(self, epochs, training_data, test_data=None, k_cv_folds=None, early_stopping_patience=None, visualize=True, suppress_output=False, save_model=True):
         """
@@ -614,9 +613,8 @@ class DroneYieldMeanCNN(nn.Module):
 
         validation_split = 1/(k_cv_folds+1) if k_cv_folds else 0.2
         if test_data is None:
-            test_set, training_set = self.split_test_train(training_data, validation_split)
-        else:
-            test_set, training_set = test_data, training_data
+            test_indices, training_indices = self.split_test_train(
+                training_data, validation_split)
 
         training_losses = []
         validation_losses = []
@@ -626,39 +624,42 @@ class DroneYieldMeanCNN(nn.Module):
         test_losses_mean_std = []
 
         for epoch in range(1, epochs+1):
-            
+
             if test_data is None:
                 epoch_training_losses, epoch_validation_losses = self.perform_cross_validation(
                     k_cv_folds=k_cv_folds,
-                    dataset=training_set)
+                    dataset=training_data,
+                    cv_indices=training_indices)
+                epoch_test_losses = self.process_batch(
+                    dataset=DataLoader(
+                        training_data[test_indices],
+                        batch_size=128,
+                        num_workers=self.num_workers),
+                    training=False)
+                
+                validation_losses.append(epoch_validation_losses)
+                validation_mean_loss = np.mean(epoch_validation_losses)
+                validation_loss_std = np.std(epoch_validation_losses)
+                validation_losses_mean_std.append(
+                    [validation_mean_loss, validation_loss_std])
 
             else:
                 epoch_training_losses = self.process_batch(
-                    training_set,
+                    training_data,
                     training=True)
-                epoch_validation_losses = self.process_batch(
+                epoch_test_losses = self.process_batch(
                     test_data,
                     training=False)
 
-            epoch_test_losses = self.process_batch(
-                    test_set,
-                    training=False)
-
             training_losses.append(epoch_training_losses)
-            validation_losses.append(epoch_validation_losses)
-            test_losses.append(epoch_test_losses)
-
             training_mean_loss = np.mean(epoch_training_losses)
             training_loss_std = np.std(epoch_training_losses)
-            validation_mean_loss = np.mean(epoch_validation_losses)
-            validation_loss_std = np.std(epoch_validation_losses)
-            test_mean_loss = np.mean(epoch_test_losses)
-            test_loss_std = np.std(epoch_test_losses)
-
             training_losses_mean_std.append(
                 [training_mean_loss, training_loss_std])
-            validation_losses_mean_std.append(
-                [validation_mean_loss, validation_loss_std])
+
+            test_losses.append(epoch_test_losses)
+            test_mean_loss = np.mean(epoch_test_losses)
+            test_loss_std = np.std(epoch_test_losses)
             test_losses_mean_std.append(
                 [test_mean_loss, test_loss_std])
 
@@ -668,9 +669,11 @@ class DroneYieldMeanCNN(nn.Module):
 
             if not suppress_output and (epoch % np.ceil(epochs/20) == 0 or terminate):
                 t_delta = time.time() - t_start
-                print("[{:4d}/{:4d}]".format(epoch, epochs),end=" ")
-                print("({:.0f}m {:2.0f}s)".format(t_delta // 60, t_delta % 60),end=" ")
-                print("\tMean Loss:\tTrain={:4.2f} +-{:4.2f}\tTest={:4.2f} +-{:4.2f}".format(training_mean_loss, training_loss_std,test_mean_loss, test_loss_std))
+                print("[{:4d}/{:4d}]".format(epoch, epochs), end=" ")
+                print("({:.0f}m {:2.0f}s)".format(
+                    t_delta // 60, t_delta % 60), end=" ")
+                print("\tMean Loss:\tTrain={:4.2f} +-{:4.2f}\tTest={:4.2f} +-{:4.2f}".format(
+                    training_mean_loss, training_loss_std, test_mean_loss, test_loss_std))
 
             if terminate:
                 print("Early stopping criterion met, terminating training.")
