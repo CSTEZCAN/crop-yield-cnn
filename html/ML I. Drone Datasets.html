@@ -12333,18 +12333,15 @@ Post-imputation: [0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">traceback</span>
-
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="k">import</span> <span class="n">DataLoader</span>
-
-<span class="kn">from</span> <span class="nn">field_analysis.model.dataset.dataperiod</span> <span class="k">import</span> <span class="p">(</span>
-    <span class="n">DroneRGBEarlier</span><span class="p">,</span> <span class="n">DroneRGBLater</span><span class="p">,</span> <span class="n">DroneNDVIEarlier</span><span class="p">,</span> <span class="n">DroneNDVILater</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">field_analysis.model.dataset.dataperiod</span> <span class="k">import</span> <span class="n">DroneRGBEarlier</span><span class="p">,</span> <span class="n">DroneRGBLater</span><span class="p">,</span> <span class="n">DroneNDVIEarlier</span><span class="p">,</span> <span class="n">DroneNDVILater</span>
 
 <span class="n">db_name</span> <span class="o">=</span> <span class="s1">&#39;field_analysis_10m_32px.db&#39;</span>
 </pre></div>
@@ -12365,13 +12362,18 @@ Post-imputation: [0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DroneRGBEarlier.size=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">DroneRGBEarlier</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DroneRGBLater.size=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">DroneRGBLater</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DroneNDVIEarlier.size=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">DroneNDVIEarlier</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DroneNDVILater.size=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">DroneNDVILater</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()))</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Training sets:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  DroneRGBEarlier</span><span class="se">\n\t</span><span class="s2">train=</span><span class="si">{}</span><span class="s2">, test=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+    <span class="n">DroneRGBEarlier</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">(),</span><span class="n">DroneRGBEarlier</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span><span class="n">test</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  DroneRGBLater</span><span class="se">\n\t</span><span class="s2">train=</span><span class="si">{}</span><span class="s2">, test=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+    <span class="n">DroneRGBLater</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">(),</span><span class="n">DroneRGBLater</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span><span class="n">test</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  DroneNDVIEarlier</span><span class="se">\n\t</span><span class="s2">train=</span><span class="si">{}</span><span class="s2">, test=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+    <span class="n">DroneNDVIEarlier</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">(),</span><span class="n">DroneNDVIEarlier</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span><span class="n">test</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  DroneNDVILater</span><span class="se">\n\t</span><span class="s2">train=</span><span class="si">{}</span><span class="s2">, test=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+    <span class="n">DroneNDVILater</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">(),</span><span class="n">DroneNDVILater</span><span class="p">(</span><span class="n">db_name</span><span class="p">,</span><span class="n">test</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()))</span>
 </pre></div>
 
 </div>
@@ -12388,10 +12390,15 @@ Post-imputation: [0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>DroneRGBEarlier.size=5241
-DroneRGBLater.size=4647
-DroneNDVIEarlier.size=5286
-DroneNDVILater.size=5197
+<pre>Training sets:
+  DroneRGBEarlier
+	train=5241, test=742
+  DroneRGBLater
+	train=4647, test=649
+  DroneNDVIEarlier
+	train=5286, test=740
+  DroneNDVILater
+	train=5197, test=722
 </pre>
 </div>
 </div>
@@ -12411,13 +12418,11 @@ DroneNDVILater.size=5197
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">DroneRGBEarlier</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
-<span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tensor for arbitrary x:&quot;</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tensor for arbitrary y:&quot;</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+<span class="n">dataset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 </pre></div>
 
 </div>
@@ -12430,36 +12435,42 @@ DroneNDVILater.size=5197
 
 <div class="output_area">
 
-<div class="prompt"></div>
+<div class="prompt output_prompt">Out[2]:</div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Tensor for arbitrary x: tensor([[[0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
-         [0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
-         [0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
-         ...,
-         [0.0000, 0.0000, 0.0000,  ..., 0.8706, 0.7373, 0.8706],
-         [0.0000, 0.0000, 0.0000,  ..., 0.7255, 0.7804, 0.8353],
-         [0.0000, 0.0000, 0.0000,  ..., 0.7765, 0.8196, 0.8157]],
 
-        [[0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
-         [0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
-         [0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
-         ...,
-         [0.0000, 0.0000, 0.0000,  ..., 0.8667, 0.7333, 0.7922],
-         [0.0000, 0.0000, 0.0000,  ..., 0.7451, 0.7451, 0.7922],
-         [0.0000, 0.0000, 0.0000,  ..., 0.7804, 0.7608, 0.7373]],
 
-        [[0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
-         [0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
-         [0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
-         ...,
-         [0.0000, 0.0000, 0.0000,  ..., 0.6667, 0.5804, 0.7098],
-         [0.0000, 0.0000, 0.0000,  ..., 0.5529, 0.6000, 0.7137],
-         [0.0000, 0.0000, 0.0000,  ..., 0.6431, 0.6667, 0.6667]]])
-Tensor for arbitrary y: tensor(2994.6353)
-</pre>
+<div class="output_text output_subarea output_execute_result">
+<pre>{&#39;x&#39;: tensor([[[0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
+          ...,
+          [0.0000, 0.0000, 0.0000,  ..., 0.8706, 0.7373, 0.8706],
+          [0.0000, 0.0000, 0.0000,  ..., 0.7255, 0.7804, 0.8353],
+          [0.0000, 0.0000, 0.0000,  ..., 0.7765, 0.8196, 0.8157]],
+ 
+         [[0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
+          ...,
+          [0.0000, 0.0000, 0.0000,  ..., 0.8667, 0.7333, 0.7922],
+          [0.0000, 0.0000, 0.0000,  ..., 0.7451, 0.7451, 0.7922],
+          [0.0000, 0.0000, 0.0000,  ..., 0.7804, 0.7608, 0.7373]],
+ 
+         [[0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
+          ...,
+          [0.0000, 0.0000, 0.0000,  ..., 0.6667, 0.5804, 0.7098],
+          [0.0000, 0.0000, 0.0000,  ..., 0.5529, 0.6000, 0.7137],
+          [0.0000, 0.0000, 0.0000,  ..., 0.6431, 0.6667, 0.6667]]]),
+ &#39;y&#39;: tensor(2994.6353),
+ &#39;id&#39;: 6090324751,
+ &#39;date&#39;: &#39;2017-06-08&#39;,
+ &#39;corner_top_left&#39;: (224225.0, 6831285.0),
+ &#39;corner_bot_right&#39;: (224235.0, 6831275.0)}</pre>
 </div>
+
 </div>
 
 </div>
@@ -12477,10 +12488,11 @@ Tensor for arbitrary y: tensor(2994.6353)
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x_arr</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="o">*</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+<span class="n">x_arr</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;x:&quot;</span><span class="p">,</span><span class="nb">type</span><span class="p">(</span><span class="n">x_arr</span><span class="p">),</span><span class="n">x_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 </pre></div>
 
