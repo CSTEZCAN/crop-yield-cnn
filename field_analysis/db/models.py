@@ -30,6 +30,11 @@ class DataPeriod(BaseModel):
     area = pw.ForeignKeyField(Area, related_name='dataperiods')
     date = pw.DateTimeField()
 
+    test_ndvi_earlier = pw.BooleanField(null=True, default=0)
+    test_ndvi_later = pw.BooleanField(null=True, default=0)
+    test_rgb_earlier = pw.BooleanField(null=True, default=0)
+    test_rgb_later = pw.BooleanField(null=True, default=0)
+
     area_sentinel = pw.BlobField(null=True)
     area_drone_ndvi = pw.BlobField(null=True)
     area_drone_rgb = pw.BlobField(null=True)
