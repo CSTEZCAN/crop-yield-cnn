@@ -21,3 +21,8 @@ DB_PATH = os.path.join(EXEC_ROOT, DATABASES_DIR, DB_NAME)
 MODELS_NAME = 'models'
 MODELS_DIR = os.path.join(EXEC_ROOT, MODELS_NAME)
 os.makedirs(MODELS_DIR, exist_ok=True)
+
+# Models
+RESULTS_NAME = 'results'
+RESULTS_DIR = os.path.join(EXEC_ROOT, RESULTS_NAME)
+os.makedirs(RESULTS_DIR, exist_ok=True)
