@@ -6,6 +6,7 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
+import pandas as pd
 import torch
 from torch import nn, optim
 from torch.autograd import Variable
@@ -525,7 +526,8 @@ class DroneYieldMeanCNN(nn.Module):
 
         if validation_losses:
             validation = np.array(validation_losses)
-            validation_mean, validation_std = validation[:, 0], validation[:, 1]
+            validation_mean, validation_std = validation[:,
+                                                         0], validation[:, 1]
             min_losses.append(validation_mean.min())
 
         test = np.array(test_losses)
@@ -539,16 +541,16 @@ class DroneYieldMeanCNN(nn.Module):
 
         plt.rcParams['figure.figsize'] = 10, 4
         plt.plot(
-            x, train_mean, label="Training", color='royalblue')
+            x, train_mean, label="CV Training Error", color='royalblue')
         plt.fill_between(
             x, train_mean+train_std, train_mean-train_std, alpha=0.15, color='royalblue')
         if validation_losses:
             plt.plot(
-                x, validation_mean, label="Validation", color='forestgreen')
+                x, validation_mean, label="CV Validation Error", color='forestgreen')
             plt.fill_between(
-            x, validation_mean+validation_std, validation_mean-validation_std, alpha=0.15, color='forestgreen')
+                x, validation_mean+validation_std, validation_mean-validation_std, alpha=0.15, color='forestgreen')
         plt.plot(
-            x, test_mean, label="Test", color='goldenrod')
+            x, test_mean, label="Validation Error", color='goldenrod')
         plt.fill_between(
             x, test_mean+test_std, test_mean-test_std, alpha=0.15, color='goldenrod')
         plt.plot(
@@ -611,7 +613,7 @@ class DroneYieldMeanCNN(nn.Module):
             else:
                 print("with CPU:")
 
-        validation_split = 1/(k_cv_folds+1) if k_cv_folds else 0.2
+        validation_split = 0.15
         if test_data is None:
             test_indices, training_indices = self.split_test_train(
                 training_data, validation_split)
@@ -636,7 +638,7 @@ class DroneYieldMeanCNN(nn.Module):
                         batch_size=128,
                         num_workers=self.num_workers),
                     training=False)
-                
+
                 validation_losses.append(epoch_validation_losses)
                 validation_mean_loss = np.mean(epoch_validation_losses)
                 validation_loss_std = np.std(epoch_validation_losses)
@@ -684,7 +686,7 @@ class DroneYieldMeanCNN(nn.Module):
 
         if save_model:
             self.save_model(suppress_output)
-            print("Best Test Loss: {:4.2f}".format(self.best_test_loss))
+            print("Best Validation Loss: {:4.2f}".format(self.best_test_loss))
 
         if visualize and not self.debug:
             self.visualize_training(
@@ -700,3 +702,30 @@ class DroneYieldMeanCNN(nn.Module):
             'validation_losses_mean_std': validation_losses_mean_std,
             'test_losses_mean_std': test_losses_mean_std
         }
+
+    def produce_test_errors(self, data):
+        ids, dates = [], []
+        corner_top_lefts, corner_bot_rights = [], []
+        y_trues, y_preds = [], []
+        for sample in data:
+            ids.append(sample['id'])
+            dates.append(sample['date'])
+            corner_top_lefts.append(sample['corner_top_left'])
+            corner_bot_rights.append(sample['corner_bot_right'])
+            y_trues.append(sample['y'].item())
+            y_preds.append(
+                self(sample['x'].unsqueeze(0).float().cuda()).item())
+        df = pd.DataFrame(columns=['y_true','y_pred','mae','block_id','date','corner_top_left','corner_bot_right'])
+        df.loc[:,'y_true'] = y_trues
+        df.loc[:,'y_pred'] = y_preds
+        df.loc[:,'mae'] = (df.loc[:,'y_pred']-df.loc[:,'y_true']).abs()
+        df.loc[:,'block_id'] = ids
+        df.loc[:,'date'] = dates
+        df.loc[:,'corner_top_left'] = corner_top_lefts
+        df.loc[:,'corner_bot_right'] = corner_bot_rights
+        df.to_csv(os.path.join(model_settings.RESULTS_DIR, f'{self.model_filename}.csv'))
+        return {
+            'mean_error':df.loc[:,'mae'].mean(),
+            'errors':df.loc[:,'mae']
+        }
+        

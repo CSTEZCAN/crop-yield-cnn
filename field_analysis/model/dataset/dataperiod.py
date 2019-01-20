@@ -139,7 +139,11 @@ class DataPeriodDataset(Dataset):
         arr_y = pickle.loads(target.area_yield)
 
         sample = {'x': self.array_to_tensor(arr_x),
-                  'y': self.array_to_tensor(arr_y)}
+                  'y': self.array_to_tensor(arr_y),
+                  'id': dataperiod.area.block_id,
+                  'date': dataperiod.date.strftime("%Y-%m-%d"),
+                  'corner_top_left': f"{dataperiod.area.top_left_x}, {dataperiod.area.top_left_y}",
+                  'corner_bot_right': f"{dataperiod.area.bot_right_x}, {dataperiod.area.bot_right_y}"}
 
         return sample
 
@@ -162,7 +166,11 @@ class DataPeriodDataset(Dataset):
         arr_y = pickle.loads(target.area_yield)
 
         sample = {'x': self.array_to_tensor(arr_x),
-                  'y': self.array_to_tensor(arr_y)}
+                  'y': self.array_to_tensor(arr_y),
+                  'id': dataperiod.area.block_id,
+                  'date': dataperiod.date.strftime("%Y-%m-%d"),
+                  'corner_top_left': f"{dataperiod.area.top_left_x}, {dataperiod.area.top_left_y}",
+                  'corner_bot_right': f"{dataperiod.area.bot_right_x}, {dataperiod.area.bot_right_y}"}
 
         return sample
 
@@ -202,26 +210,32 @@ class DroneRGBEarlier(DataPeriodDataset):
     The samples are contained in a dict with key 'x' corresponding to input dataset and 'y' to target dataset.
     """
 
-    def __init__(self, db_name=None, image_target=False):
+    def __init__(self, db_name=None, image_target=False, test=False):
         """
         Args:
 
             image_target: A Boolean for whether to use images as targets or not. Defaults to False.
             db_name: Name of the dataset DB file to use.
+            test: Whether to retrieve test samples or training samples.
         """
         super().__init__(db_name)
 
         self.dataperiods = (DataPeriod
                             .select(DataPeriod.date,
                                     DataPeriod.area_drone_rgb,
-                                    Area.id,
+                                    DataPeriod.test_rgb_earlier,
+                                    Area.block_id,
+                                    Area.top_left_x,
+                                    Area.top_left_y,
+                                    Area.bot_right_x,
+                                    Area.bot_right_y,
                                     Target.area_yield)
                             .join(Area)
                             .join(Target)
                             .where(
                                 (DataPeriod.area_drone_rgb.is_null(False)) &
                                 (DataPeriod.date < DATE_DIVIDER) &
-                                (Area.block_id != 8860095891) &
+                                (DataPeriod.test_rgb_earlier == test) &
                                 (Target.area_yield.is_null(False))))
         if image_target:
             self.get_function = self.pair_rgb_to_yield_img
@@ -245,26 +259,32 @@ class DroneRGBLater(DataPeriodDataset):
     The samples are contained in a dict with key 'x' corresponding to input dataset and 'y' to target dataset.
     """
 
-    def __init__(self, db_name=None, image_target=False):
+    def __init__(self, db_name=None, image_target=False, test=False):
         """
         Args:
 
             image_target: A Boolean for whether to use images as targets or not. Defaults to False.
             db_name: Name of the dataset DB file to use.
+            test: Whether to retrieve test samples or training samples.
         """
         super().__init__(db_name)
 
         self.dataperiods = (DataPeriod
                             .select(DataPeriod.date,
                                     DataPeriod.area_drone_rgb,
-                                    Area.id,
+                                    DataPeriod.test_rgb_later,
+                                    Area.block_id,
+                                    Area.top_left_x,
+                                    Area.top_left_y,
+                                    Area.bot_right_x,
+                                    Area.bot_right_y,
                                     Target.area_yield)
                             .join(Area)
                             .join(Target)
                             .where(
                                 (DataPeriod.area_drone_rgb.is_null(False)) &
                                 (DataPeriod.date >= DATE_DIVIDER) &
-                                (Area.block_id != 8860095891) &
+                                (DataPeriod.test_rgb_later == test) &
                                 (Target.area_yield.is_null(False))))
         if image_target:
             self.get_function = self.pair_rgb_to_yield_img
@@ -288,26 +308,32 @@ class DroneNDVIEarlier(DataPeriodDataset):
     The samples are contained in a dict with key 'x' corresponding to input dataset and 'y' to target dataset.
     """
 
-    def __init__(self, db_name=None, image_target=False):
+    def __init__(self, db_name=None, image_target=False, test=False):
         """
         Args:
 
             image_target: A Boolean for whether to use images as targets or not. Defaults to False.
             db_name: Name of the dataset DB file to use.
+            test: Whether to retrieve test samples or training samples.
         """
         super().__init__(db_name)
 
         self.dataperiods = (DataPeriod
                             .select(DataPeriod.date,
                                     DataPeriod.area_drone_ndvi,
-                                    Area.id,
+                                    DataPeriod.test_ndvi_earlier,
+                                    Area.block_id,
+                                    Area.top_left_x,
+                                    Area.top_left_y,
+                                    Area.bot_right_x,
+                                    Area.bot_right_y,
                                     Target.area_yield)
                             .join(Area)
                             .join(Target)
                             .where(
                                 (DataPeriod.area_drone_ndvi.is_null(False)) &
                                 (DataPeriod.date < DATE_DIVIDER) &
-                                (Area.block_id != 8860095891) &
+                                (DataPeriod.test_ndvi_earlier == test) &
                                 (Target.area_yield.is_null(False))))
         if image_target:
             self.get_function = self.pair_ndvi_to_yield_img
@@ -331,25 +357,31 @@ class DroneNDVILater(DataPeriodDataset):
     The samples are contained in a dict with key 'x' corresponding to input dataset and 'y' to target dataset.
     """
 
-    def __init__(self, db_name=None, image_target=False):
+    def __init__(self, db_name=None, image_target=False, test=False):
         """
         Args:
 
             image_target: A Boolean for whether to use images as targets or not. Defaults to False.
             db_name: Name of the dataset DB file to use.
+            test: Whether to retrieve test samples or training samples.
         """
         super().__init__(db_name)
         self.dataperiods = (DataPeriod
                             .select(DataPeriod.date,
                                     DataPeriod.area_drone_ndvi,
-                                    Area.id,
+                                    DataPeriod.test_ndvi_later,
+                                    Area.block_id,
+                                    Area.top_left_x,
+                                    Area.top_left_y,
+                                    Area.bot_right_x,
+                                    Area.bot_right_y,
                                     Target.area_yield)
                             .join(Area)
                             .join(Target)
                             .where(
                                 (DataPeriod.area_drone_ndvi.is_null(False)) &
                                 (DataPeriod.date >= DATE_DIVIDER) &
-                                (Area.block_id != 8860095891) &
+                                (DataPeriod.test_ndvi_later == test) &
                                 (Target.area_yield.is_null(False))))
 
         if image_target:
