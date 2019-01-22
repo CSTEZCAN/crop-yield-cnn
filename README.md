@@ -18,7 +18,6 @@ The notebooks prefixed `GDAL` were run in an environment compliant with the `gda
 - [ML I. Drone Datasets](http://htmlpreview.github.io/?https://github.com/karmus89/crop-yield-cnn/blob/master/html/ML%20I.%20Drone%20Datasets.html)
 - [ML II. Building the CNN](http://htmlpreview.github.io/?https://github.com/karmus89/crop-yield-cnn/blob/master/html/ML%20II.%20Building%20the%20CNN.html)
 - [ML III. CNN Optimization](http://htmlpreview.github.io/?https://github.com/karmus89/crop-yield-cnn/blob/master/html/ML%20III.%20CNN%20Optimization.html)
-- [Appendix A. Assessing the Models](http://htmlpreview.github.io/?https://github.com/karmus89/crop-yield-cnn/blob/master/html/Appendix%20A.%20Assessing%20the%20Models.html)
 
 ---
 
